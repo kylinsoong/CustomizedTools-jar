@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	
+    <parent>
+        <groupId>com.customized.tools</groupId>
+        <artifactId>cst-jar-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>CustomizedTools</artifactId>
+    <name>Customized Tools Build</name>
+    <description>Customized Tools Build</description>
+    
+    <dependencies>
+		<dependency>
+		    <groupId>com.customized.tools</groupId>
+		    <artifactId>cst-jar-core</artifactId>
+		</dependency>
+		
+    </dependencies>
+    
+    <build>
+
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<configuration>
+						<archiverConfig>
+							<fileMode>0644</fileMode>
+                            <directoryMode>0755</directoryMode>
+                            <defaultDirectoryMode>0755</defaultDirectoryMode>
+						</archiverConfig>
+					</configuration>
+				</plugin>
+			</plugins>
+        </pluginManagement>
+
+        <plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+					<configuration>
+                        	<descriptors>
+                        		<descriptor>assembly/jar-assembly.xml</descriptor>
+                        	</descriptors>
+                        	<finalName>${cst.build.name}</finalName>
+                        	<archive>
+                        		<manifest>
+              						<mainClass>com.customized.tools.Main</mainClass>
+            					</manifest>
+                        	</archive>
+                        </configuration>
+                	<executions>
+                	<execution>
+                    	<id>jar-with-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                        	<goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+			</plugin>
+		</plugins>
+    </build>
+    
+	
+</project>
