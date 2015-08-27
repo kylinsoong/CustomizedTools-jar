@@ -18,6 +18,6 @@ you will find distribution `customizedTools-jar` under "build/target" directory 
 ## Run
 
 ~~~
-java -jar customizedTools-jar
+java -jar customizedTools-jar.jar
 ~~~
 
