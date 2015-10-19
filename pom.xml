@@ -27,6 +27,7 @@
 	<version.aesh>0.61-SNAPSHOT</version.aesh>
 	<version.aesh-extensions>0.59</version.aesh-extensions>
 	<version.itextpdf>5.5.5</version.itextpdf>
+	<version.org.apache.cxf>2.7.17</version.org.apache.cxf>
 
 	<version.jar.plugin>2.2</version.jar.plugin>
 	<version.assembly.plugin>2.5.5</version.assembly.plugin>
@@ -177,7 +178,21 @@
 	    <artifactId>itextpdf</artifactId>
 	    <version>${version.itextpdf}</version>
 	</dependency>
-
+          <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-bundle</artifactId>
+                <version>${version.org.apache.cxf}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.cxf</groupId>
+                        <artifactId>cxf-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.cxf</groupId>
+                        <artifactId>cxf-rt-core</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
 
 
     </dependencies>

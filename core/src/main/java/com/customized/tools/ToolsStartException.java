@@ -1,6 +1,5 @@
 package com.customized.tools;
 
-
 public class ToolsStartException extends ToolsException {
 
 	private static final long serialVersionUID = 1254143617547688287L;

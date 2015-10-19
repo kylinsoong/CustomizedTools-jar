@@ -15,6 +15,7 @@ import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalString;
 
+import com.customized.tools.commands.AuthUtilCommand;
 import com.customized.tools.commands.ConverterCommand;
 import com.customized.tools.commands.DBTesterCommand;
 import com.customized.tools.commands.ExitCommand;
@@ -25,7 +26,6 @@ import com.customized.tools.commands.JVMConfigCommand;
 import com.customized.tools.commands.JarClassSearcherCommand;
 import com.customized.tools.commands.LSCommand;
 import com.customized.tools.commands.SQLPlusCommand;
-import com.customized.tools.commands.TDAWrapperCommand;
 
 public class AeshContainer implements LifeCycle {
 	
@@ -72,7 +72,7 @@ public class AeshContainer implements LifeCycle {
 				.command(FileSearcherCommand.class)
 				.command(FileChangeMonitorCommand.class)
 				.command(GCViewerWrapperCommand.class)
-//				.command(TDAWrapperCommand.class)
+				.command(AuthUtilCommand.class)
 				.command(DBTesterCommand.class)
 				.command(JVMConfigCommand.class)
 				.command(LSCommand.class)
