@@ -2,6 +2,7 @@ package com.customized.tools.commands;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
@@ -18,24 +19,27 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.Response;
 
+import org.apache.cxf.Bus;
+import org.apache.cxf.BusFactory;
+import org.apache.cxf.helpers.IOUtils;
+import org.apache.cxf.jaxrs.client.JAXRSClientFactoryBean;
+import org.apache.cxf.jaxrs.client.WebClient;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
+import org.jboss.aesh.terminal.Key;
 
 import com.customized.tools.ToolsException;
 import com.customized.tools.commands.Validator.InputNotNullValidator;
 
 @CommandDefinition(name="auth", description = "[-t]\nA Basic Java Security Authentication Client")
 public class AuthUtilCommand implements Command<CommandInvocation> {
-    
-    public static final String OAUTH2_0_RESULT = 
-            "Authentication Result: \n" + 
-            "    \"client-id\" = \"{0}\" \n" + 
-            "    \"client-secret\" = \"{1}\" \n" +
-            "    \"access-token\" =\"{2}\"  \n";
     
     @Option(shortName = 'H', name = "help", hasValue = false,
             description = "display this help and exit")
@@ -55,22 +59,18 @@ public class AuthUtilCommand implements Command<CommandInvocation> {
             commandInvocation.getShell().out().println(commandInvocation.getHelpInfo("auth"));
             return CommandResult.SUCCESS;
         }
-        
-        Scanner in = new Scanner(commandInvocation.getShell().in().getStdIn());
-        
+                
         switch(type) {
         case "OAuth-1.0A" :
             oauth10Flow(commandInvocation, commandInvocation.getShell().out());
             break;
         case "OAuth2-Weibo":
-            oauth20Flow(commandInvocation, commandInvocation.getShell().out());
+            oauth2WeiboFlow(commandInvocation, commandInvocation.getShell().out());
             break;
         default: 
             commandInvocation.getShell().out().println(type + " not support");
         }
-        
-        in.close();
-        
+                
         return CommandResult.SUCCESS;
     }
 
@@ -78,12 +78,91 @@ public class AuthUtilCommand implements Command<CommandInvocation> {
         
     }
 
-    private void oauth20Flow(CommandInvocation commandInvocation, PrintStream out) {
+    /**
+     * 请求授权    oauth2/authorize    请求用户授权Token
+     * 获取授权    oauth2/access_token     获取授权过的Access Token
+     * 授权查询    oauth2/get_token_info   查询用户access_token的授权相关信息
+     * 替换授权    oauth2/get_oauth2_token     OAuth1.0的Access Token更换至OAuth2.0的Access Token
+     * 授权回收    OAuth2/revokeoauth2     授权回收接口，帮助开发者主动取消用户的授权 
+     * @param commandInvocation
+     * @param out
+     */
+    private void oauth2WeiboFlow(CommandInvocation commandInvocation, PrintStream out) {
         
         out.println("=== OAuth 2.0 Weibo Workflow ===");
         out.println();
         
+        while(true) {
+            out.println("Select a, b or c to start");
+            out.println("    a. get authorized access token");
+            out.println("    b. get access token information");
+            out.println("    c. remove authorized access token");
+            
+            CommandOperation operation = null;
+            try {
+                operation = commandInvocation.getInput();
+            }
+            catch (InterruptedException e) {
+                out.println(e.getMessage());
+            }
+            Key key = operation.getInputKey();
+            
+            if(key.equals(Key.a)){
+                weibo_access_token(commandInvocation, out);
+                break;
+            } else if(key.equals(Key.b)){
+                weibo_query_access_token(commandInvocation, out);
+                break;
+            } else if(key.equals(Key.c)) {
+                weibo_remove_access_token(commandInvocation, out);
+                break;
+            } 
+        }
+    }
+    
+    private void weibo_remove_access_token(CommandInvocation commandInvocation, PrintStream out) {
+        
         try {
+            out.println("");
+            String access_token = getInput(commandInvocation, "Enter Access Token = ");
+            String remove = "https://api.weibo.com/oauth2/revokeoauth2";
+            Bus bus = BusFactory.getThreadDefaultBus();
+            WebClient wc = createWebClient(remove, bus);
+            Response resp = wc.form(new Form().param("access_token", access_token));
+            out.println("");
+            out.println("Remove Access Token:");
+            IOUtils.copy((InputStream) resp.getEntity(), out);
+            wc.close();
+        } catch (Exception e) {
+            throw new ToolsException("CST-AUTH", "Weibo OAuth 2.0 remove token failed", e);
+        }
+        
+        
+    }
+
+    private void weibo_query_access_token(CommandInvocation commandInvocation, PrintStream out) {
+
+        try {
+            out.println("");
+            String access_token = getInput(commandInvocation, "Enter Access Token = ");
+            String get_token_info = "https://api.weibo.com/oauth2/get_token_info";
+//            Bus bus = BusFactory.getThreadDefaultBus();
+            WebClient wc = WebClient.create(get_token_info);/*createWebClient(get_token_info, bus);*/
+            Response resp = wc.form(new Form().param("access_token", access_token));
+            out.println("");
+            out.println("Access Token Info:");
+            IOUtils.copy((InputStream) resp.getEntity(), out);
+            wc.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ToolsException("CST-AUTH", "Weibo OAuth 2.0 get token info failed", e);
+        }
+    }
+
+    private void weibo_access_token(CommandInvocation commandInvocation, PrintStream out) {
+
+        try {
+            out.println("");
             String clientId = getInput(commandInvocation, "Enter the Client ID = ");
             String clientSecret = getInput(commandInvocation, "Enter the Client Secret = "); 
             
@@ -93,64 +172,32 @@ public class AuthUtilCommand implements Command<CommandInvocation> {
             out.println("https://api.weibo.com/oauth2/authorize?client_id=" + clientId + "&response_type=code&redirect_uri=" + redirectUri + "&forcelogin=true");
             out.println("");
             
-            String authCode = getInput(commandInvocation, "Enter Token Secret (Auth Code, Pin) from previous step = ");
+            String authCode = getInput(commandInvocation, "Enter Auth Code from previous step = ");
                         
-            String url="https://api.weibo.com/oauth2/access_token";
-            String parameters = "client_id=" + clientId + "&client_secret=" + clientSecret + "&grant_type=authorization_code" + "&redirect_uri=" + redirectUri + "&code=" + authCode;
+            String access_token = "https://api.weibo.com/oauth2/access_token";
             
-            commandInvocation.getShell().out().println("Post URL: " + url + "?" + parameters);
-            trustAllHttpsCertificates();
-            URLConnection conn = new URL(url).openConnection();
-            conn.setDoOutput(true);
-            OutputStreamWriter outWriter = new OutputStreamWriter(conn.getOutputStream());
-            outWriter.write(parameters);
-            outWriter.flush();
-            outWriter.close();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String line = null;
-            commandInvocation.getShell().out().println("Response:");
-            while ((line = reader.readLine()) != null){
-                commandInvocation.getShell().out().println(line);
-            }            
+            Bus bus = BusFactory.getThreadDefaultBus();
+            WebClient wc = createWebClient(access_token, bus);
             
-            String token = getInput(commandInvocation, "Enter the access token from above json response = ");
+            Response resp = wc.form(new Form().param("client_id", clientId).param("client_secret", clientSecret).param("grant_type", "authorization_code").param("code", authCode).param("redirect_uri", redirectUri));
             
             out.println("");
-            out.println(MessageFormat.format(OAUTH2_0_RESULT, clientId, clientSecret, token));
-            
+            out.println("Access Token:");
+            IOUtils.copy((InputStream) resp.getEntity(), out);
+            wc.close();
         } catch (Exception e) {
-            throw new ToolsException("CST-AUTH", "OAuth 2.0 Authentication failed", e);
+            throw new ToolsException("CST-AUTH", "Weibo OAuth 2.0 access token failed", e);
         }
-        
-        
-        
     }
     
-    private void trustAllHttpsCertificates() throws NoSuchAlgorithmException, KeyManagementException {
-        TrustManager[] trustAllCerts = new TrustManager[1];
-        trustAllCerts[0] = new X509TrustManager(){
+    private WebClient createWebClient(String baseAddress, Bus bus) {
+        
+        JAXRSClientFactoryBean bean = new JAXRSClientFactoryBean();
+        bean.setBus(bus);
+        bean.setAddress(baseAddress);
+        return bean.createWebClient();
+    } 
 
-            @Override
-            public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-                
-            }
-
-            @Override
-            public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-                
-            }
-
-            @Override
-            public X509Certificate[] getAcceptedIssuers() {
-                return null;
-            }
-            
-        };
-        SSLContext sc = SSLContext.getInstance("SSL");
-        sc.init(null, trustAllCerts, null);
-        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-    }
-    
     
     private String getInput(CommandInvocation commandInvocation, String message) throws Exception {
         return getInput(commandInvocation, message, false); 
