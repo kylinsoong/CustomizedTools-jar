@@ -25,6 +25,7 @@
 	<version.mysql>5.1.30</version.mysql>
 	<version.com.h2database>1.4.186</version.com.h2database>
 	<version.aesh>0.61-SNAPSHOT</version.aesh>
+	<version.scribe>1.3.7</version.scribe>
 	<version.aesh-extensions>0.59</version.aesh-extensions>
 	<version.itextpdf>5.5.5</version.itextpdf>
 	<cxf.version>3.1.3</cxf.version>
@@ -192,6 +193,11 @@
                 <artifactId>cxf-rt-frontend-jaxrs</artifactId>
                 <version>${cxf.version}</version>
             </dependency>
+        <dependency>
+            <groupId>org.scribe</groupId>
+            <artifactId>scribe</artifactId>
+            <version>${version.scribe}</version>
+        </dependency>
     </dependencies>
     </dependencyManagement>
 

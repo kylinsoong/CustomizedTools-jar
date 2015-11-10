@@ -30,14 +30,9 @@
 		</dependency>
         
         <dependency>
-        <groupId>org.apache.cxf</groupId>
-        <artifactId>cxf-rt-rs-client</artifactId>
-    </dependency>
-    <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-rs-security-oauth</artifactId>
+            <groupId>org.scribe</groupId>
+            <artifactId>scribe</artifactId>
         </dependency>
-        
     </dependencies>
 
 	
